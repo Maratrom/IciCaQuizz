@@ -1,14 +1,14 @@
 package com.supdevinci.icicaquizz.viewmodel
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.supdevinci.icicaquizz.data.RetrofitInstance
 import com.supdevinci.icicaquizz.model.Question
+import com.supdevinci.icicaquizz.model.QuizzResponse
 import com.supdevinci.icicaquizz.model.User
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainViewModel : ViewModel() {
     val user = User(null, null)
@@ -23,15 +23,21 @@ class MainViewModel : ViewModel() {
         user.firstName = newFirstName
     }
 
-    fun getQuizz() {
-        println("Starting Coroutine")
-        CoroutineScope(Dispatchers.IO).launch {
-            val response = RetrofitInstance.apiService.getQuizz()
-            println("Code: ${response.responseCode}")
-            withContext(Dispatchers.Main) {
-                if (response.responseCode == 0) {
-                    quizzList.value = response.results
-                }
+    private val _question = MutableLiveData<Question?>()
+    val question: LiveData<Question?> = _question
+
+    private val _error = MutableLiveData<String?>()
+    val error: LiveData<String?> = _error
+
+    fun fetchQuestion() {
+        viewModelScope.launch {
+            try {
+                val response: QuizzResponse = RetrofitInstance.api.getQuizz(amount = 1)
+                val result = response.results.firstOrNull()
+                _question.postValue(result)
+                _error.postValue(null)
+            } catch (e: Exception) {
+                _error.postValue("Error: ${e.localizedMessage}")
             }
         }
     }
