@@ -6,15 +6,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 
 object RetrofitInstance {
-        private const val BASE_URL = "https://opentdb.com/"
-
-        fun getRetrofitInstance(): Retrofit {
-            return Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(BASE_URL)
-                .build()
-        }
-
-    val apiService = getRetrofitInstance().create(QuizzService::class.java)
+    val api: QuizzService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://opentdb.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(QuizzService::class.java)
+    }
 }
 
